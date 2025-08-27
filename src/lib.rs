@@ -1,11 +1,10 @@
-
 use std::sync::Arc;
 
 async fn pets_create(
     _state: Arc<AppState>,
     _request: proto::PetsCreateRequest,
     _headers: proto::Headers,
-) -> Result<reflectapi::Empty, proto::PetsCreateError> {
+) -> Result<proto::PetsCreateResponse, proto::PetsCreateError> {
     todo!("not implemented")
 }
 
@@ -88,6 +87,11 @@ pub mod proto {
     pub struct PetsCreateRequest(pub crate::model::Pet);
 
     #[derive(serde::Serialize, reflectapi::Output)]
+    pub struct PetsCreateResponse {
+        id: u64,
+    }
+
+    #[derive(serde::Serialize, reflectapi::Output)]
     pub enum PetsCreateError {
         Conflict,
         NotAuthorized,
@@ -99,7 +103,9 @@ pub mod proto {
             match self {
                 PetsCreateError::Conflict => http::StatusCode::CONFLICT,
                 PetsCreateError::NotAuthorized => http::StatusCode::UNAUTHORIZED,
-                PetsCreateError::InvalidIdentityCharacter { .. } => http::StatusCode::UNPROCESSABLE_ENTITY,
+                PetsCreateError::InvalidIdentityCharacter { .. } => {
+                    http::StatusCode::UNPROCESSABLE_ENTITY
+                }
             }
         }
     }

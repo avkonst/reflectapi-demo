@@ -3,25 +3,26 @@ import { client } from './generated';
 
 async function main() {
     const c = client('http://localhost:3000');
-    (
-        await c.pets.create({
-            name: 'Bobby',
-            kind: {
-                type: 'dog',
-                breed: 'Golden Retriever'
-            },
-            age: 1,
-            behaviors: [],
-        }, {
-            authorization: 'password'
-        })
-    ).unwrap_ok_or_else((e) =>
-        match(e.unwrap(), {
+
+    const result = await c.pets.create({
+        name: 'Bobby',
+        kind: {
+            type: 'dog',
+            breed: 'Golden Retriever'
+        },
+        age: 1,
+        behaviors: [],
+    }, {
+        authorization: 'password'
+    })
+    let { id } = result.unwrap_ok_or_else((e) => {
+        throw match(e.unwrap(), {
             Conflict: () => 'Conflict',
             NotAuthorized: () => 'NotAuthorized',
             InvalidIdentityCharacter: ({ char }) => `invalid character: ${char}`,
-        })
-    );
+        });
+    });
+    console.log(`created id: ${id}`);
 }
 
 main()

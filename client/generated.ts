@@ -255,7 +255,10 @@ export namespace __definition {
     create: (
       input: myapi.proto.PetsCreateRequest,
       headers: myapi.proto.Headers,
-    ) => AsyncResult<{}, myapi.proto.PetsCreateError>;
+    ) => AsyncResult<
+      myapi.proto.PetsCreateResponse,
+      myapi.proto.PetsCreateError
+    >;
   }
 }
 export namespace myapi {
@@ -346,14 +349,11 @@ export namespace myapi {
         };
 
     export type PetsCreateRequest = myapi.model.Pet;
-  }
-}
 
-export namespace reflectapi {
-  /**
-   * Struct object with no fields
-   */
-  export interface Empty {}
+    export interface PetsCreateResponse {
+      id: number /* u64 */;
+    }
+  }
 }
 
 namespace __implementation {
@@ -381,7 +381,7 @@ namespace __implementation {
       __request<
         myapi.proto.PetsCreateRequest,
         myapi.proto.Headers,
-        {},
+        myapi.proto.PetsCreateResponse,
         myapi.proto.PetsCreateError
       >(client, "/pets.create", input, headers);
   }
