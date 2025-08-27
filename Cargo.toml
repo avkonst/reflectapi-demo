@@ -1,0 +1,22 @@
+[package]
+name = "reflectapi-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+reflectapi = { version = "*", features = [
+    "uuid",
+    "builder",
+    "axum",
+    "codegen",
+    "msgpack",
+    "json",
+] }
+http = "*"
+axum = "*"
+
+# add tokio with multi threaded runtime
+tokio = { version = "*", features = ["full"] }
+
+serde = "*"
