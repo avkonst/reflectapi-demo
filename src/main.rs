@@ -8,7 +8,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let builder = reflectapi_demo::builder();
     let (schema, routers) = builder.build()?;
 
-    // prepare spec for online documentation
+    // capture the spec for online documentation
     let openapi_spec = reflectapi::codegen::openapi::Spec::from(&schema);
 
     // generate typescript code
