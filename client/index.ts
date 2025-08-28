@@ -1,28 +1,19 @@
-import { match } from 'match';
-import { client } from './generated';
+import { client, match } from './generated';
 
 async function main() {
     const c = client('http://localhost:3000');
 
-    const result = await c.pets.create({
-        name: 'Bobby',
-        kind: {
-            type: 'dog',
-            breed: 'Golden Retriever'
-        },
-        age: 1,
-        behaviors: [],
-    }, {
+    const result = await c.books.list({}, {
         authorization: 'password'
     })
-    let { id } = result.unwrap_ok_or_else((e) => {
+    let { items, pagination } = result.unwrap_ok_or_else((e) => {
         throw match(e.unwrap(), {
-            Conflict: () => 'Conflict',
-            NotAuthorized: () => 'NotAuthorized',
-            InvalidIdentityCharacter: ({ char }) => `invalid character: ${char}`,
+            Unauthorized: () => 'NotAuthorized',
+            LimitExceeded: ({ requested, allowed }) => `Limit exceeded: ${requested} > ${allowed}`,
         });
     });
-    console.log(`created id: ${id}`);
+    console.log(`items: ${items[0]?.author}`);
+    console.log(`next cursor: ${pagination.next_cursor}`);
 }
 
 main()

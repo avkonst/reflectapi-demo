@@ -20,3 +20,4 @@ axum = "*"
 tokio = { version = "*", features = ["full"] }
 
 serde = "*"
+uuid = { version = "*", features = ["v4"] }

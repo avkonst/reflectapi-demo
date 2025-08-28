@@ -241,117 +241,224 @@ class ClientInstance {
   }
 }
 
+type UnionToIntersection<U> = (
+  U extends any ? (k: U) => unknown : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+// How it works:
+// type Step0 =
+// 	{ a: { x: string } }
+// 	| { b: number }
+// 	| 'c'
+
+// First transformation:
+// Turn the `string` variant into an object variant so each variant of the union is now uniform.
+// type AfterStep1 =
+// 	{ a: { x: string } }
+// 	| { b: number }
+// 	| { c: {} }
+
+type Step1<T> = T extends object
+  ? T
+  : T extends string
+    ? { [K in T]: unknown }
+    : never;
+
+// Second transformation:
+// We want to merge the unions into a single object type.
+// This is implemented by turning the union into an intersection.
+// type AfterStep2 = {
+// 	a: { x: string }
+// 	b: number
+// 	c: {}
+// }
+
+type Step2<T> = UnionToIntersection<T>;
+
+// Final transformation:
+// Turn each value type into a function that takes the value type as an argument and returns the result type.
+// type AfterStep3<R> = {
+// 	a: (arg: { x: string }) => R
+// 	b: (arg: number) => R
+// 	c: (arg: {}) => R
+// }
+
+type Step3<T, R> = { [K in keyof T]: (arg: T[K]) => R };
+
+type Cases<T, R> = Step3<Step2<Step1<T>>, R>;
+
+type CasesNonExhaustive<T, R> = Partial<Cases<T, R>>;
+
+/**
+ * Ergonomically and exhaustively handle all possible cases of a discriminated union
+ * in the externally tagged representation (https://serde.rs/enum-representations.html).
+ *
+ * @example
+ * ```typescript
+ * type Status = 'loading' | { success: { data: string } } | { error: { message: string } };
+ *
+ * function handleStatus(status: Status) {
+ *   return match(status, {
+ *     loading: () => 'Loading...',
+ *     success: ({ data }) => `Success: ${data}`,
+ *     error: ({ message }) => `Error: ${message}`
+ *   });
+ * }
+ *
+ * // With default handler for non-exhaustive matching
+ * function handleStatusWithDefault(status: Status) {
+ *   return match(
+ *     status,
+ *     { loading: () => 'Loading...' },
+ *     () => 'Unknown status'
+ *   );
+ * }
+ * ```
+ */
+export function match<T extends object | string, R>(
+  value: T,
+  cases: Cases<T, R>,
+): R;
+export function match<T extends object | string, R>(
+  value: T,
+  cases: CasesNonExhaustive<T, R>,
+  otherwise: () => R,
+): R;
+export function match<T extends object | string, R>(
+  value: T,
+  cases: Cases<T, R> | CasesNonExhaustive<T, R>,
+  otherwise?: () => R,
+): R {
+  const branches = cases as Record<string, (arg: any) => R>;
+  switch (typeof value) {
+    case "string":
+      if (value in branches) {
+        return branches[value]({});
+      }
+
+      if (!otherwise) {
+        throw new Error("otherwise must exist for non-exhaustive match");
+      }
+      return otherwise();
+
+    case "object": {
+      if (Object.keys(value).length !== 1) {
+        throw new Error(
+          "Expected object with exactly one key, see serde documentation for externally tagged enums above",
+        );
+      }
+
+      const [k, v] = Object.entries(value)[0];
+      if (k in branches) {
+        return branches[k](v);
+      }
+      if (!otherwise) {
+        throw new Error("otherwise must exist for non-exhaustive match");
+      }
+      return otherwise();
+    }
+
+    default:
+      throw new Error("unreachable");
+  }
+}
+
 /* -----> */
 
 export namespace __definition {
   export interface Interface {
-    pets: PetsInterface;
+    books: BooksInterface;
   }
 
-  export interface PetsInterface {
+  export interface BooksInterface {
     /**
-     * Create a new pet
+     * List all books
      */
-    create: (
-      input: myapi.proto.PetsCreateRequest,
-      headers: myapi.proto.Headers,
+    list: (
+      input: booksapi.proto.Cursor,
+      headers: booksapi.proto.Authorization,
     ) => AsyncResult<
-      myapi.proto.PetsCreateResponse,
-      myapi.proto.PetsCreateError
+      booksapi.proto.Items<booksapi.model.Book>,
+      booksapi.proto.BooksListError
     >;
   }
 }
-export namespace myapi {
+export namespace booksapi {
   export namespace model {
-    export type Behavior =
-      | "Calm"
-      | {
-          Aggressive: [
-            /**
-             * aggressiveness level
-             */
-            number /* f64 */,
-            /**
-             * some notes
-             */
-            string,
-          ];
-        }
-      | {
-          Other: {
-            /**
-             * Custom provided description of a behavior
-             */
-            description: string;
-            /**
-             * Additional notes
-             * Up to a user to put free text here
-             */
-            notes?: string;
-          };
-        };
-
-    export type Kind =
+    export interface Book {
       /**
-       * A dog
+       * Database identity
        */
-      | {
-          type: "dog";
-          /**
-           * breed of the dog
-           */
-          breed: string;
-        }
+      id: string /* uuid::Uuid */;
       /**
-       * A cat
+       * ISBN - identity
        */
-      | {
-          type: "cat";
-          /**
-           * lives left
-           */
-          lives: number /* u8 */;
-        };
-
-    export interface Pet {
+      isbn: string;
       /**
-       * identity
+       * Title
        */
-      name: string;
+      title: string;
       /**
-       * kind of pet
+       * Book author, full name
        */
-      kind: myapi.model.Kind;
+      author: string;
       /**
-       * @deprecated test deprecation
+       * Genre
+       */
+      genre: booksapi.model.BookGenre;
+      /**
+       * @deprecated demo deprecation
        * age of the pet
        */
-      age?: number /* u8 */ | null;
+      release_year?: number /* u16 */ | null;
       /**
        * behaviors of the pet
        */
-      behaviors?: Array<myapi.model.Behavior>;
+      tags?: Array<string>;
     }
+
+    export type BookGenre =
+      | { type: "fiction" }
+      | {
+          type: "science";
+          subject: string;
+        }
+      | { type: "biography" }
+      | {
+          type: "other";
+          description: string;
+        };
   }
 
   export namespace proto {
-    export interface Headers {
+    export interface Authorization {
       authorization: string;
     }
 
-    export type PetsCreateError =
-      | "Conflict"
-      | "NotAuthorized"
+    export type BooksListError =
+      | "Unauthorized"
       | {
-          InvalidIdentityCharacter: {
-            char: string;
+          LimitExceeded: {
+            requested: number /* u32 */;
+            allowed: number /* u32 */;
           };
         };
 
-    export type PetsCreateRequest = myapi.model.Pet;
+    export interface Cursor {
+      cursor?: string | null;
+      limit?: number /* u32 */ | null;
+    }
 
-    export interface PetsCreateResponse {
-      id: number /* u64 */;
+    export interface Items<T> {
+      items: Array<T>;
+      pagination: booksapi.proto.Pagination;
+    }
+
+    export interface Pagination {
+      next_cursor: string | null;
+      prev_cursor: string | null;
     }
   }
 }
@@ -364,8 +471,8 @@ namespace __implementation {
       typeof base === "string" ? new ClientInstance(base) : base;
     return {
       impl: {
-        pets: {
-          create: pets__create(client_instance),
+        books: {
+          list: books__list(client_instance),
         },
       },
     }.impl;
@@ -373,16 +480,16 @@ namespace __implementation {
 
   /* -----> */
 
-  function pets__create(client: Client) {
+  function books__list(client: Client) {
     return (
-      input: myapi.proto.PetsCreateRequest,
-      headers: myapi.proto.Headers,
+      input: booksapi.proto.Cursor,
+      headers: booksapi.proto.Authorization,
     ) =>
       __request<
-        myapi.proto.PetsCreateRequest,
-        myapi.proto.Headers,
-        myapi.proto.PetsCreateResponse,
-        myapi.proto.PetsCreateError
-      >(client, "/pets.create", input, headers);
+        booksapi.proto.Cursor,
+        booksapi.proto.Authorization,
+        booksapi.proto.Items<booksapi.model.Book>,
+        booksapi.proto.BooksListError
+      >(client, "/books.list", input, headers);
   }
 }

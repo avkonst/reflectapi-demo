@@ -1,0 +1,403 @@
+{
+  "name": "",
+  "functions": [
+    {
+      "name": "books.list",
+      "path": "",
+      "description": "List all books",
+      "input_type": {
+        "name": "booksapi::proto::Cursor"
+      },
+      "input_headers": {
+        "name": "booksapi::proto::Authorization"
+      },
+      "output_type": {
+        "name": "booksapi::proto::Items",
+        "arguments": [
+          {
+            "name": "booksapi::model::Book"
+          }
+        ]
+      },
+      "error_type": {
+        "name": "booksapi::proto::BooksListError"
+      },
+      "serialization": [
+        "json",
+        "msgpack"
+      ]
+    }
+  ],
+  "input_types": {
+    "types": [
+      {
+        "kind": "struct",
+        "name": "booksapi::proto::Authorization",
+        "fields": {
+          "named": [
+            {
+              "name": "authorization",
+              "type": {
+                "name": "std::string::String"
+              },
+              "required": true
+            }
+          ]
+        }
+      },
+      {
+        "kind": "struct",
+        "name": "booksapi::proto::Cursor",
+        "fields": {
+          "named": [
+            {
+              "name": "cursor",
+              "type": {
+                "name": "std::option::Option",
+                "arguments": [
+                  {
+                    "name": "std::string::String"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "name": "std::option::Option",
+                "arguments": [
+                  {
+                    "name": "u32"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "enum",
+        "name": "std::option::Option",
+        "description": "Optional nullable type",
+        "parameters": [
+          {
+            "name": "T"
+          }
+        ],
+        "representation": "none",
+        "variants": [
+          {
+            "name": "None",
+            "description": "The value is not provided, i.e. null",
+            "fields": "none"
+          },
+          {
+            "name": "Some",
+            "description": "The value is provided and set to some value",
+            "fields": {
+              "unnamed": [
+                {
+                  "name": "0",
+                  "type": {
+                    "name": "T"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "primitive",
+        "name": "std::string::String",
+        "description": "UTF-8 encoded string"
+      },
+      {
+        "kind": "primitive",
+        "name": "u32",
+        "description": "32-bit unsigned integer"
+      }
+    ]
+  },
+  "output_types": {
+    "types": [
+      {
+        "kind": "struct",
+        "name": "booksapi::model::Book",
+        "fields": {
+          "named": [
+            {
+              "name": "id",
+              "description": "Database identity",
+              "type": {
+                "name": "uuid::Uuid"
+              },
+              "required": true
+            },
+            {
+              "name": "isbn",
+              "description": "ISBN - identity",
+              "type": {
+                "name": "std::string::String"
+              },
+              "required": true
+            },
+            {
+              "name": "title",
+              "description": "Title",
+              "type": {
+                "name": "std::string::String"
+              },
+              "required": true
+            },
+            {
+              "name": "author",
+              "description": "Book author, full name",
+              "type": {
+                "name": "std::string::String"
+              },
+              "required": true
+            },
+            {
+              "name": "genre",
+              "description": "Genre",
+              "type": {
+                "name": "booksapi::model::BookGenre"
+              },
+              "required": true
+            },
+            {
+              "name": "release_year",
+              "description": "age of the pet",
+              "deprecation_note": "demo deprecation",
+              "type": {
+                "name": "std::option::Option",
+                "arguments": [
+                  {
+                    "name": "u16"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "tags",
+              "description": "behaviors of the pet",
+              "type": {
+                "name": "std::vec::Vec",
+                "arguments": [
+                  {
+                    "name": "std::string::String"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "enum",
+        "name": "booksapi::model::BookGenre",
+        "representation": {
+          "internal": {
+            "tag": "type"
+          }
+        },
+        "variants": [
+          {
+            "name": "fiction",
+            "fields": "none"
+          },
+          {
+            "name": "science",
+            "fields": {
+              "named": [
+                {
+                  "name": "subject",
+                  "type": {
+                    "name": "std::string::String"
+                  },
+                  "required": true
+                }
+              ]
+            }
+          },
+          {
+            "name": "biography",
+            "fields": "none"
+          },
+          {
+            "name": "other",
+            "fields": {
+              "named": [
+                {
+                  "name": "description",
+                  "type": {
+                    "name": "std::string::String"
+                  },
+                  "required": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "enum",
+        "name": "booksapi::proto::BooksListError",
+        "variants": [
+          {
+            "name": "Unauthorized",
+            "fields": "none"
+          },
+          {
+            "name": "LimitExceeded",
+            "fields": {
+              "named": [
+                {
+                  "name": "requested",
+                  "type": {
+                    "name": "u32"
+                  },
+                  "required": true
+                },
+                {
+                  "name": "allowed",
+                  "type": {
+                    "name": "u32"
+                  },
+                  "required": true
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "struct",
+        "name": "booksapi::proto::Items",
+        "parameters": [
+          {
+            "name": "T"
+          }
+        ],
+        "fields": {
+          "named": [
+            {
+              "name": "items",
+              "type": {
+                "name": "std::vec::Vec",
+                "arguments": [
+                  {
+                    "name": "T"
+                  }
+                ]
+              },
+              "required": true
+            },
+            {
+              "name": "pagination",
+              "type": {
+                "name": "booksapi::proto::Pagination"
+              },
+              "required": true
+            }
+          ]
+        }
+      },
+      {
+        "kind": "struct",
+        "name": "booksapi::proto::Pagination",
+        "fields": {
+          "named": [
+            {
+              "name": "next_cursor",
+              "type": {
+                "name": "std::option::Option",
+                "arguments": [
+                  {
+                    "name": "std::string::String"
+                  }
+                ]
+              },
+              "required": true
+            },
+            {
+              "name": "prev_cursor",
+              "type": {
+                "name": "std::option::Option",
+                "arguments": [
+                  {
+                    "name": "std::string::String"
+                  }
+                ]
+              },
+              "required": true
+            }
+          ]
+        }
+      },
+      {
+        "kind": "enum",
+        "name": "std::option::Option",
+        "description": "Optional nullable type",
+        "parameters": [
+          {
+            "name": "T"
+          }
+        ],
+        "representation": "none",
+        "variants": [
+          {
+            "name": "None",
+            "description": "The value is not provided, i.e. null",
+            "fields": "none"
+          },
+          {
+            "name": "Some",
+            "description": "The value is provided and set to some value",
+            "fields": {
+              "unnamed": [
+                {
+                  "name": "0",
+                  "type": {
+                    "name": "T"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "primitive",
+        "name": "std::string::String",
+        "description": "UTF-8 encoded string"
+      },
+      {
+        "kind": "primitive",
+        "name": "std::vec::Vec",
+        "description": "Expandable array type",
+        "parameters": [
+          {
+            "name": "T"
+          }
+        ]
+      },
+      {
+        "kind": "primitive",
+        "name": "u16",
+        "description": "16-bit unsigned integer"
+      },
+      {
+        "kind": "primitive",
+        "name": "u32",
+        "description": "32-bit unsigned integer"
+      },
+      {
+        "kind": "primitive",
+        "name": "uuid::Uuid",
+        "description": "UUID value type"
+      }
+    ]
+  }
+}
