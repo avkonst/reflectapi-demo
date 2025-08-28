@@ -12,7 +12,7 @@ async fn books_list(
     let max_limit_allowed = 100;
     if input.limit.unwrap_or(0) > max_limit_allowed {
         return Err(proto::BooksListError::LimitExceeded {
-            requested: input.limit.unwrap_or(max_limit_allowed),
+            requested: input.limit.unwrap_or(0),
             allowed: max_limit_allowed,
         });
     }
