@@ -11,7 +11,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // capture the spec for online documentation
     let openapi_spec = reflectapi::codegen::openapi::Spec::from(&schema);
 
-    // generate typescript code
+    // generate schema file for external tools
+    let schema_json = serde_json::to_string_pretty(&schema)?;
+    std::fs::write("reflectapi.json", schema_json)?;
+
+    // generate typescript code (for development/compatibility)
     let ts_code: String = reflectapi::codegen::typescript::generate(
         schema,
         &reflectapi::codegen::typescript::Config::default().format(true),
